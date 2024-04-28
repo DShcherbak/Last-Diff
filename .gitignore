@@ -1,2 +1,8 @@
 /target
 Cargo.lock
+after-biggest.cpp
+after_tree.txt
+before_tree.txt
+before-biggest.cpp
+package-lock.json
+.vscode/launch.json
