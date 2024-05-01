@@ -6,3 +6,6 @@ before_tree.txt
 before-biggest.cpp
 package-lock.json
 .vscode/launch.json
+tree-sitter-cpp
+tree-sitter-haskell
+

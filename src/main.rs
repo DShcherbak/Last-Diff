@@ -53,6 +53,8 @@ fn compare_trees_walk(left: &mut TreeCursor, right: &mut TreeCursor) -> Vec<Diff
     let l_node = left.node();
     let r_node = right.node();
     let mut diff_coords: Vec<DiffCheckCoord> = Vec::new();
+  //  println!("left node: {}, {}", l_node.kind(), l_node.child_count());
+  //  println!("right node: {}, {}", r_node.kind(), r_node.child_count());
     if l_node.kind() != r_node.kind() || l_node.child_count() != r_node.child_count() {
         return vec![DiffCheckCoord {
                 start_byte_left: l_node.start_byte(),
@@ -96,28 +98,81 @@ fn compare_trees_on_high_level(
     return compare_trees_walk(l_cursor, r_cursor);
 }
 
+fn signed(num: i32) -> String {
+    if num > 0 {
+        format!("+{}", num)
+    } else {
+        num.to_string()
+    }
+}
+
 fn create_diffs(diffs: Vec<DiffCheckCoord>, left_file: &str, right_file: &str) -> Vec<String> {
     if diffs.len() == 0 {
         return vec!["\n\t\t\tNo structural diff found between files.\n".to_string()];
     }
     let mut diff_strings: Vec<String> = Vec::new();
     for diff in diffs {
+        let left_first_row_num:i32 = left_file[0..diff.start_byte_left].split('\n').count() as i32 -1;
+        let right_first_row_num = right_file[0..diff.start_byte_right].split('\n').count() as i32 -1;
         let left_diff = &left_file[diff.start_byte_left..diff.end_byte_left]
             .split('\n')
             .collect::<Vec<&str>>();
         let right_diff = &right_file[diff.start_byte_right..diff.end_byte_right]
             .split('\n')
             .collect::<Vec<&str>>();
-        diff_strings.extend(difflib::unified_diff(
+        let mut current_diff = difflib::unified_diff(
             &left_diff,
             &right_diff,
-            "left",
-            "right",
-            "L",
-            "R",
+            "before",
+            "after",
+            "",
+            "",
             3,
-        ));
-        diff_strings.push("-------------------------\n-------------------------\n".to_string());
+        );
+        // for line in &current_diff {
+        //     println!("{};;;", line);
+        // }
+        let numbers = current_diff[2].split(" ").collect::<Vec<&str>>();
+        let left_nums = numbers[1].split(",").collect::<Vec<&str>>();
+        let right_nums = numbers[2].split(",").collect::<Vec<&str>>();
+
+        let left_start : i32 = if let Ok(l) = left_nums[0].parse::<i32>() {
+            if l > 0 {
+                l + left_first_row_num
+            }
+            else {
+                l - left_first_row_num
+            }
+        } else { 1 };
+
+        let right_start = if let Ok(right_start) = right_nums[0].parse::<i32>() {
+            if right_start > 0 {
+                right_start + right_first_row_num
+            }
+            else {
+                right_start - right_first_row_num
+            }
+        } else { 1 };
+
+        let left_finish = if left_nums.len() > 1 {
+            format!("{},{}", signed(left_start), left_nums[1])
+        } else {
+            signed(left_start)
+        };
+
+        let right_finish = if right_nums.len() > 1 {
+            format!("{},{}", signed(right_start), right_nums[1])
+        } else {
+            signed(right_start)
+        };
+
+        current_diff[2] = format!("@@ {} {} @@\n", left_finish, right_finish);
+        for i in 3..current_diff.len() {
+            current_diff[i] = format!("{}{}", current_diff[i], "\n");
+        }
+        //@@ -1 +1 @@
+        diff_strings.extend(current_diff);
+        diff_strings.push("\n##########################\n\n".to_string());
     }
     diff_strings
 }
@@ -129,16 +184,16 @@ fn main() {
     let after_file = "src/tests/after.ml"; //&args[2];
     let mut parser = Parser::new();
     // parser.set_language(&tree_sitter_ocaml::language_ocaml()).unwrap();
-    parser.set_language(&tree_sitter_cpp::language()).unwrap();
+    parser.set_language(&tree_sitter_ocaml::language_ocaml()).unwrap();
     let before_content = parse_file(before_file);
     let after_content = parse_file(after_file);
     let before_tree = parser.parse(before_content.clone(), None).unwrap();
     let after_tree = parser.parse(after_content.clone(), None).unwrap();
     // let _ = fs::write("before_tree.txt", before_tree.root_node().to_sexp());
     //   let _ = fs::write("after_tree.txt", after_tree.root_node().to_sexp());
-       print_tree(&before_content, &before_tree);
-       println!("-----------------");
-       print_tree(&after_content, &after_tree);
+    //    print_tree(&before_content, &before_tree);
+    //    println!("-----------------");
+    //    print_tree(&after_content, &after_tree);
 
     //   println!("-----------------");
     if before_tree
@@ -151,17 +206,17 @@ fn main() {
         let diffs = compare_trees_on_high_level(&before_tree, &after_tree);
         let diff_strings = create_diffs(diffs, &before_content, &after_content);
         for diff in diff_strings {
-            println!("{}", diff);
+            print!("{}", diff);
         }
     }
 }
 
 #[test]
 fn test_parser() {
-    let language = unsafe { tree_sitter_cpp() };
+ //   let language = unsafe { tree_sitter_cpp() };
     let mut parser = Parser::new();
     // parser.set_language(&tree_sitter_rust::language()).unwrap();
-    parser.set_language(&language).unwrap();
+    parser.set_language(&tree_sitter_cpp::language()).unwrap();
 
     // Store some source code in an array of lines.
     let lines = &["int main() {", "  return 0;", "}"];
@@ -170,7 +225,7 @@ fn test_parser() {
     // with both a byte offset and a row/column offset.
     let tree = parser
         .parse_with(
-            &mut |_byte: usize, position: Point| -> &[u8] {
+            &mut |_byte: usize, position| -> &[u8] {
                 let row = position.row as usize;
                 let column = position.column as usize;
                 if row < lines.len() {
