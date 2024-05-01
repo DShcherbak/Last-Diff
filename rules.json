@@ -1,0 +1,63 @@
+{
+    "hierarchy": 
+    [
+        {
+            "head": ["translation_unit"],
+            "high-level": [
+                {"item": "function_definition"},
+                {"head": "class_specifier", "items": [
+                    {"item": "function_definition"}
+                ]},
+                {"item": "enum_specifier"},
+                {"head": "namespace_definition", "items": [
+                    {"item": "function_definition"},
+                    {"item": "class_specifier"},
+                    {"item": "enum_specifier"},
+                    {"self": "self"}
+                ]}
+            ]
+        }
+    ],
+    "equivalency" : [
+        {
+            "left": "function_definition",
+            "right": "function_definition",
+            "equivalency": [
+                {
+                    "left": ["function_declarator", "paramether_list"], 
+                    "right": ["function_declarator", "paramether_list"]},
+                {"left": "compound_statement", "right": "compound_statement"}
+            ]
+        }
+    ],
+    "ignore":[
+        {
+            "left": [{ "type": "primitive_type", "name": 0},
+                {"type" : "function_declarator", "kids": [{"type": "identifier","name": 1}]}],
+            "right": [{"type": "placeholder_type_specifier"},
+                {"type": "function_declarator", "kids": [
+                    {"type": "identifier","name": 1},
+                    {"type": "parameter_list"},
+                    {"type": "trailing_return_type", "kids" : [
+                        {"type": "type_descriptor", "kids": [
+                            {"type": "primitive_type", "name": 0}
+                        ]}
+                    ]}]}
+            ]
+        }
+    ],
+    "group": [
+        {
+            "if": {
+                "left": {"type" : "function_declarator", "kids": [{"type": "identifier","name": 1}]},
+                "right": {"type": "function_declarator", "kids": [{"type": "identifier","name": 2}]}
+            },
+            "group": [
+                {"left": [{"type": "call_expression", "kids": [{"type": "identifier", "name": 1}]}],
+                 "right": [{"type": "call_expression", "kids": [{"type": "identifier", "name": 2}]}]}
+            ],
+            "name": "Function {1} was renamed to {2}"
+        }
+    ]
+}
+
