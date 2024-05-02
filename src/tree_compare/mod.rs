@@ -12,8 +12,8 @@ fn compare_trees_walk(left: &mut TreeCursor, right: &mut TreeCursor) -> Vec<Diff
     let l_node = left.node();
     let r_node = right.node();
     let mut diff_coords: Vec<DiffCheckCoord> = Vec::new();
-    println!("left node: {}, {}", l_node.kind(), l_node.child_count());
-    println!("right node: {}, {}", r_node.kind(), r_node.child_count());
+   // println!("left node: {}, {}", l_node.kind(), l_node.child_count());
+  //  println!("right node: {}, {}", r_node.kind(), r_node.child_count());
     if l_node.kind() != r_node.kind() || l_node.child_count() != r_node.child_count() {
         return vec![DiffCheckCoord {
                 start_byte_left: l_node.start_byte(),
@@ -96,8 +96,8 @@ pub fn compare_highs(mut before_highs: Vec<tree_sitter::Node>, mut after_highs: 
     }
     let mut removed:Vec<bool> = before_highs.clone().iter().map(|hi| true).collect();
     let mut inserted:Vec<bool> = before_highs.clone().iter().map(|hi| true).collect();
-    println!("pairs: {:?}", pairs);
-    println!("removed: {:?}", removed);
+   // println!("pairs: {:?}", pairs);
+   // println!("removed: {:?}", removed);
     for pair in pairs {
         removed[pair.0] = false;
         inserted[pair.1] = false;

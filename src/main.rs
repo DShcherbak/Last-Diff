@@ -17,8 +17,8 @@ pub mod rules;
 fn main() {
     //   println!("Hello, Last!");
     let _args: Vec<String> = env::args().collect();
-    let before_file = "src/tests/before-2.cpp"; //&args[1];
-    let after_file = "src/tests/after-2.cpp"; //&args[2];
+    let before_file = "src/tests/before-1.cpp"; //&args[1];
+    let after_file = "src/tests/after-1.cpp"; //&args[2];
     let mut parser = Parser::new();
     let before_content = parse_file(before_file);
     let after_content = parse_file(after_file);
@@ -56,16 +56,19 @@ fn main() {
         let after_highs = parse_highs(&after_tree, &rules);
         let diffs = compare_highs(before_highs, after_highs);
         let diff_strings = create_diffs(diffs, &before_content, &after_content);
-            for diff in diff_strings {
-                print!("{}", diff);
-            }
+        if diff_strings.len() == 0 {
+            println!("\n\t\t\tNo structural diff between files.\n\n");
+        }
+        for diff in diff_strings {
+            print!("{}", diff);
+        } 
     } else {
         if before_tree
         .root_node()
         .to_sexp()
         .eq(&after_tree.root_node().to_sexp())
         {
-            println!("\n\t\t\tNo structural diff between files.\n");
+            println!("\n\t\t\tNo structural diff between files.\n\n");
         } else {
             let diffs = compare_trees_on_high_level(&before_tree, &after_tree);
             let diff_strings = create_diffs(diffs, &before_content, &after_content);
